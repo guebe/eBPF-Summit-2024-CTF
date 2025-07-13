@@ -70,18 +70,18 @@ static inline int redirect_tcp(struct __sk_buff *skb, bool ingress) {
     }
 
     // something doesn't seem right here
-    __u16 source = tcp.source;
-    __u16 dest = tcp.dest;
+    __u16 source = bpf_ntohs(tcp.source);
+    __u16 dest = bpf_ntohs(tcp.dest);
 
     // Print out any traffic we might be interested in
     if (source > 1024 && dest > 1024) {
-      bpf_printk("ingress:%s source: %d -> destination %d",
-                 ingress ? "true" : "false", source, dest);
+      bpf_printk("%s: source: %d -> destination %d",
+                 ingress ? "igress" : "egress", source, dest);
     }
 
     if (ingress) {
       if (dest == 2001) {
-        tcp.dest = 2000;
+        tcp.dest = bpf_htons(2000);
         long ret =
             bpf_skb_store_bytes(skb, sizeof(struct ethhdr) + (ip.ihl << 2),
                                 &tcp, sizeof(tcp), BPF_F_RECOMPUTE_CSUM);
@@ -91,6 +91,15 @@ static inline int redirect_tcp(struct __sk_buff *skb, bool ingress) {
       }
     } else {
       // something is missing here
+      if (source == 2000) {
+        tcp.source = bpf_htons(2001);
+        long ret =
+            bpf_skb_store_bytes(skb, sizeof(struct ethhdr) + (ip.ihl << 2),
+                                &tcp, sizeof(tcp), BPF_F_RECOMPUTE_CSUM);
+        if (ret != 0) {
+          bpf_printk("Error writing bytes");
+        }
+      }
     }
 
     // The Rebel engineer left some TCP dump output, might help, might be a read

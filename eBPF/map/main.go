@@ -2,6 +2,7 @@ package main
 
 import (
 	log "log/slog"
+	"time"
 
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/rlimit"
@@ -22,9 +23,9 @@ func main() {
 	}
 
 	// Lets create a map
-	mapSpec.Name = ""
+	mapSpec.Name = "empire_Yey"
 	mapSpec.Contents = []ebpf.MapKV{
-		{Key: uint8(1), Value: []byte("")},
+		{Key: uint8(1), Value: []byte("brRz3HVSVzC6RXrBC2Y7")},
 	}
 	m, err := ebpf.NewMap(&mapSpec)
 	if err != nil {
@@ -32,5 +33,5 @@ func main() {
 		panic(err)
 	}
 	defer m.Close()
-	//time.Sleep(time.Minute)
+	time.Sleep(time.Minute * 60)
 }

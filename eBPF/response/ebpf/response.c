@@ -91,7 +91,10 @@ static inline int swap_udp(struct __sk_buff *skb) {
 
       u32 data_offset = sizeof(*eth) + sizeof(*iph) + sizeof(*udph);
 
-      data[0] = '?';
+      //data[0] = '?';
+      data[0] = 'A';
+      data[1] = 'C';
+      data[2] = 'K';
 
       ret = bpf_skb_store_bytes(skb, data_offset, &data, sizeof(data),
                                 BPF_F_RECOMPUTE_CSUM);
@@ -101,16 +104,50 @@ static inline int swap_udp(struct __sk_buff *skb) {
       /* We'll store the mac addresses (L2) */
       __u8 src_mac[ETH_ALEN];
       __u8 dst_mac[ETH_ALEN];
-      __builtin_memcpy(src_mac, eth->h_source, ETH_ALEN);
-      __builtin_memcpy(dst_mac, eth->h_dest, ETH_ALEN);
+      //__builtin_memcpy(src_mac, eth->h_source, ETH_ALEN);
+      //__builtin_memcpy(dst_mac, eth->h_dest, ETH_ALEN);
+      ret = bpf_skb_load_bytes(skb, offsetof(struct ethhdr, h_source), src_mac, ETH_ALEN);
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
+      ret = bpf_skb_load_bytes(skb, offsetof(struct ethhdr, h_dest), dst_mac, ETH_ALEN);
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
 
       /* ip addresses (L3) */
-      __be32 src_ip = iph->saddr;
-      __be32 dst_ip = iph->daddr;
+      //__be32 src_ip = iph->saddr;
+      //__be32 dst_ip = iph->daddr;
+      __be32 src_ip;
+      __be32 dst_ip;
+      ret = bpf_skb_load_bytes(skb, sizeof(struct ethhdr) + offsetof(struct iphdr, saddr), &src_ip, sizeof(src_ip));
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
+      ret = bpf_skb_load_bytes(skb, sizeof(struct ethhdr) + offsetof(struct iphdr, daddr), &dst_ip, sizeof(dst_ip));
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
 
       /* and source/destination ports (L4) */
-      __be16 dest_port = udph->dest;
-      __be16 src_port = udph->source;
+      //__be16 dest_port = udph->dest;
+      //__be16 src_port = udph->source;
+      __be16 dest_port;
+      __be16 src_port;
+      ret = bpf_skb_load_bytes(skb, sizeof(struct ethhdr) + sizeof(struct iphdr) + offsetof(struct udphdr, source), &src_port, sizeof(src_port));
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
+      ret = bpf_skb_load_bytes(skb, sizeof(struct ethhdr) + sizeof(struct iphdr) + offsetof(struct udphdr, dest), &dest_port, sizeof(dest_port));
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
 
       /* and then swap them all */
 

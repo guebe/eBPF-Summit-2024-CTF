@@ -27,7 +27,7 @@ func main() {
 
 	flag.Parse()
 
-	log.Info("Starting 🐝 the eBPF redirecter, on interface [%s]", *ifaceName)
+	log.Infof("Starting 🐝 the eBPF redirecter, on interface [%s]", *ifaceName)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
