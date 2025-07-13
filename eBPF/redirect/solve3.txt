@@ -1,0 +1,43 @@
+```
+go generate
+go build
+sudo ./redirect
+```
+
+We have to fix endianess on three lines:
+```
+    // something doesn't seem right here
+    __u16 source = bpf_ntohs(tcp.source);
+    __u16 dest = bpf_ntohs(tcp.dest);
+
+        tcp.dest = bpf_htons(2000);
+```
+
+Then we are redirecting authentication to the right port 2000 instead of 2001.
+
+But the answer (TCP ACK) also has to be redirected. Because the answer will
+have source port 2000 then (because of our previous redirect). In order to
+make the three way handshake work we have to change source port on egress back
+to 2001.
+
+```
+    ...
+    } else {
+      // something is missing here
+      if (source == 2000) {
+        tcp.source = bpf_htons(2001);
+        long ret =
+            bpf_skb_store_bytes(skb, sizeof(struct ethhdr) + (ip.ihl << 2),
+                                &tcp, sizeof(tcp), BPF_F_RECOMPUTE_CSUM);
+        if (ret != 0) {
+          bpf_printk("Error writing bytes");
+        }
+      }
+```
+
+This is how you can monitor what is going on:
+```
+sudo tcpdump -i lo -vv
+```
+
+

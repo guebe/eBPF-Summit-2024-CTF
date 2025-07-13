@@ -1,0 +1,29 @@
+
+```
+$ go build
+$ sudo ./map
+2025/07/13 16:37:25 ERROR map create fail
+panic: populating map: putting value: key 1: marshal value: []uint8 doesn't marshal to 20 bytes
+
+...
+```
+
+We have to change the map name like printed by the app:
+```
+	mapSpec.Name = "empire_Yey"
+```
+
+We have to change the map key to the value from the task description
+```
+	mapSpec.Contents = []ebpf.MapKV{
+		{Key: uint8(1), Value: []byte("brRz3HVSVzC6RXrBC2Y7")},
+	}
+```
+
+You have to sleep some time so that the map stays alive (otherwise garbage collected).
+Don't forget to import "time" on the top of the file.
+```
+	time.Sleep(time.Minute * 60)
+```
+
+Keep the program running by putting it in the background (Ctrl-Z) and `bg`

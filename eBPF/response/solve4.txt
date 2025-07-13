@@ -1,0 +1,90 @@
+```
+go generate
+go build
+sudo ./response
+```
+
+First we have to fix all coding mistakes:
+
+```
+      // Something doesn't seem right
+
+      /* We'll store the mac addresses (L2) */
+      __u8 src_mac[ETH_ALEN];
+      __u8 dst_mac[ETH_ALEN];
+      //__builtin_memcpy(src_mac, eth->h_source, ETH_ALEN);
+      //__builtin_memcpy(dst_mac, eth->h_dest, ETH_ALEN);
+      ret = bpf_skb_load_bytes(skb, offsetof(struct ethhdr, h_source), src_mac, ETH_ALEN);
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
+      ret = bpf_skb_load_bytes(skb, offsetof(struct ethhdr, h_dest), dst_mac, ETH_ALEN);
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
+
+      /* ip addresses (L3) */
+      //__be32 src_ip = iph->saddr;
+      //__be32 dst_ip = iph->daddr;
+      __be32 src_ip;
+      __be32 dst_ip;
+      ret = bpf_skb_load_bytes(skb, sizeof(struct ethhdr) + offsetof(struct iphdr, saddr), &src_ip, sizeof(src_ip));
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
+      ret = bpf_skb_load_bytes(skb, sizeof(struct ethhdr) + offsetof(struct iphdr, daddr), &dst_ip, sizeof(dst_ip));
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
+
+      /* and source/destination ports (L4) */
+      //__be16 dest_port = udph->dest;
+      //__be16 src_port = udph->source;
+      __be16 dest_port;
+      __be16 src_port;
+      ret = bpf_skb_load_bytes(skb, sizeof(struct ethhdr) + sizeof(struct iphdr) + offsetof(struct udphdr, source), &src_port, sizeof(src_port));
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
+      ret = bpf_skb_load_bytes(skb, sizeof(struct ethhdr) + sizeof(struct iphdr) + offsetof(struct udphdr, dest), &dest_port, sizeof(dest_port));
+      if (ret) {
+        bpf_printk("error");
+        return TC_ACT_OK;
+      }
+```
+
+Then we have to "acknowledge" the "SYN".
+This was a hint in the challenge description.
+
+```
+      //data[0] = '?';
+      data[0] = 'A';
+      data[1] = 'C';
+      data[2] = 'K';
+```
+
+Then:
+
+Connect> Mainframe acknowledged response
+Security Lock 2>  [ ▮ ]
+Security> Root Key> LtEpy/V9TvGNkG75hZPkG9RlLv4YmhgR+dC6rz5Xskuyl5IC
+Security> Root Key> Please make sure you copy your "Root key" into the
+CTF Slack channel!
+System> Shutting Down!
+
+
+
+Outro:
+========
+You call Blue Hex on her holocomm. You tell her: the chocolates are so
+good! Oh, and also you shut down the TIE fighter product lines, all of
+them. It will take a couple of years for the engineers to repair the damage. This is more time than you need to clear up the skies around you, and safely move the base to another system. While hacking into the Imperial mainframe, you also discovered where Bajeroff Lake resides. Now,
+if only your ship was able to fly. Beeping sounds? IP-V6, what do you say? The _Yellow Stripe_ is ready at last? And there you go, Jephen'Tsa, rushing to your next adventure.
+
+
+May the Force accompany you.
