@@ -5,7 +5,7 @@
 
 # use the name needed for you username
 sudo bpftool map dump name empire_qMq
-# edit the script and add replave the hex values
+# edit the script and add replace the hex values
 python3 solve1.py
 # use output from above program:
 sudo bpftool map update name empire_qMq key 1 value 0x67 0x70 0x48 0x57 0x45 0x75 0x4c 0x77 0x6f 0x57 0x75 0x77 0x55 0x58 0x77 0x72 0x49 0x71 0x47 0x47
